@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const int MAX_SHAKING = 10;
+const int MAX_SHAKING = 3;
 
 int N;
 long long D;
@@ -42,6 +42,10 @@ struct State
     State()
     {
         parent = vector<int>(N, 0);
+        for (int i = 1; i < N; i++)
+        {
+            parent[i] = i - 1;
+        }
         children = vector<vector<int>>(N, vector<int>());
         for (int i = 1; i < N; i++)
         {
@@ -87,7 +91,7 @@ bool State::isValidSolution()
 {
     for (int i = 1; i < N; i++)
     {
-        if (State::calTimeDuration(i) > D)
+        if (this->calTimeDuration(i) > D)
         {
             return false;
         }
@@ -177,7 +181,7 @@ pair<bool, State> State::localSearch()
 {
     State result = *this;
     bool hasSolution = result.isValidSolution();
-    vector<State> neighbors = getAllNeighbors();
+    vector<State> neighbors = result.getAllNeighbors();
     for (auto element : neighbors)
     {
         if (element.isValidSolution() && ((!hasSolution) || (element.getCost() < result.getCost())))
@@ -210,6 +214,14 @@ vector<State> getMoreNeighbors(vector<State>& currentNeighbors, vector<State> la
     return newNeighbors;
 }
 
+clock_t start;
+
+bool outOfTimeLimit(float timeLimitInSeconds = 3600.0f)
+{
+    clock_t timer = clock();
+    return ((float) timer - start) / CLOCKS_PER_SEC >= timeLimitInSeconds;
+}
+
 State bestState;
 
 void variableNeighborhoodSearch()
@@ -219,7 +231,7 @@ void variableNeighborhoodSearch()
     vector<State> currentNeighborStructure = vector<State>{currentState};
     vector<State> latestNeighbors = vector<State>{currentState};
     int k = 1;
-    while (k <= MAX_SHAKING)
+    while ((k <= MAX_SHAKING) && !outOfTimeLimit())
     {
         latestNeighbors = getMoreNeighbors(currentNeighborStructure, latestNeighbors);
         State randomState = getRandom<State>(currentNeighborStructure);
@@ -241,7 +253,7 @@ void variableNeighborhoodSearch()
 
 void State::write()
 {
-    if (isValidSolution())
+    if (this->isValidSolution())
     {
         for (int i = 1; i < N; i++)
         {
@@ -259,13 +271,36 @@ int main()
 {
     ios_base::sync_with_stdio(0);
     cin.tie(0);
-    freopen("D:\\Optimal\\project_optimal_planning\\DataSet\\data2.txt", "r", stdin);
-    freopen("D:\\Optimal\\project_optimal_planning\\Variable-Neighborhood-Search\\output\\output2.txt", "w", stdout);
-    readData();
-    clock_t start = clock();
-    variableNeighborhoodSearch();
-    clock_t end = clock();
-    bestState.write();
-    cout << "Solving time: " << ((float) end - start) / CLOCKS_PER_SEC;
+    string inputDirectory = "D:\\Optimal\\project_optimal_planning\\DataSet\\";
+    string outputDirectory = "D:\\Optimal\\project_optimal_planning\\Variable-Neighborhood-Search\\output\\";
+    vector<vector<string>> fileNames = vector<vector<string>>{
+        {"data1.txt", "output1.txt"},
+        {"data2.txt", "output2.txt"},
+        {"data3.txt", "output3.txt"},
+        {"data4.txt", "output4.txt"},
+        {"data5.txt", "output5.txt"},
+        {"data6.txt", "output6.txt"},
+        {"data7.txt", "output7.txt"},
+        {"data8.txt", "output8.txt"},
+        {"data9.txt", "output9.txt"},
+        {"data10.txt", "output10.txt"}
+    };
+    for (auto p: fileNames)
+    {
+        string _inputFile = inputDirectory + p[0];
+        const char* inputFile = _inputFile.c_str();
+        freopen(inputFile, "r", stdin);
+        string _outputFile = outputDirectory + p[1];
+        const char* outputFile = _outputFile.c_str();
+        // cout << inputFile << " " << outputFile << endl;
+        freopen(outputFile, "w", stdout);
+        readData();
+        // cout << N << " " << D << endl;
+        start = clock();
+        variableNeighborhoodSearch();
+        clock_t end = clock();
+        bestState.write();
+        cout << "Solving time: " << ((float) end - start) / CLOCKS_PER_SEC << endl;
+    }
     return 0;
 }
