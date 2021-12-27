@@ -38,4 +38,4 @@
 13 -> 12
 18 -> 14
 Cost:  132.000
-Solving time:    0.054
+Solving time:    0.053

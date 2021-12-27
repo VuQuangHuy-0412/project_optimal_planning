@@ -18,4 +18,4 @@
 8 -> 16
 15 -> 18
 Cost:   75.000
-Solving time:    0.006
+Solving time:    0.005
