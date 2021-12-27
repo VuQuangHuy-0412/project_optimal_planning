@@ -98,4 +98,4 @@
 66 -> 67
 68 -> 64
 Cost:  333.000
-Solving time:    1.178
+Solving time:    1.221

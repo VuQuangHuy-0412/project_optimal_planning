@@ -58,4 +58,4 @@
 33 -> 30
 25 -> 26
 Cost:  199.000
-Solving time:    0.208
+Solving time:    0.191
