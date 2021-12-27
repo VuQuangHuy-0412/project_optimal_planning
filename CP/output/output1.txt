@@ -3,4 +3,4 @@
 3 -> 4
 4 -> 1
 Cost:   21.000
-Solving time:    0.015
+Solving time:    0.012

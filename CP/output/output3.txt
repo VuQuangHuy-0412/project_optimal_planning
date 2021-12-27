@@ -18,4 +18,4 @@
 16 -> 15
 18 -> 19
 Cost:   75.000
-Solving time:    1.384
+Solving time:    0.612
