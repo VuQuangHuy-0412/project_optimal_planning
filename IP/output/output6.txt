@@ -48,4 +48,4 @@
 47 -> 48
 48 -> 49
 Cost:  172.000
-Solving time: 3600.696
+Solving time: 3600.708
