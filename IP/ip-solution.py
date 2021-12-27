@@ -79,7 +79,7 @@ def ip_solve(data):
 
     # print(solver.ExportModelAsLpFormat(False).replace('\\', '').replace(',_', ','), sep='\n')
     # solver.parameters.max_time_in_seconds = 3600.0
-    solver.SetTimeLimit(3600)
+    solver.SetTimeLimit(3600000)
     status = solver.Solve()
     # print("Status", status)
     s = ''
