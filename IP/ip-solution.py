@@ -95,9 +95,9 @@ def ip_solve(data):
 
 
 if __name__ == '__main__':
-    file_name = 'data1.txt'
+    file_name = 'data3.txt'
     data = read_data(file_name)
-    # print(data['N'])
+    print(file_name)
     start = time.time()
     s = ip_solve(data)
     stop = time.time()
