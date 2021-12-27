@@ -19,7 +19,7 @@ def read_data(file_name):
         data['c'].append([int(e) for e in line.split(' ')][:data['N']])
     return data
 
-def solve(data):
+def edmond_solve(data):
     N, D, d, max_d, c = data['N'], data['D'], data['d'], data['max_d'], data['c']
     V = set()
     E = set()
@@ -218,11 +218,11 @@ def msa(V, E, r, w, t, D):
     return ret
 
 if __name__ == '__main__':
-    file_name = 'data10.txt'
+    file_name = 'data1000.txt'
     data = read_data(file_name)
     # print(data['N'])
     start = time.time()
-    s = solve(data)
+    s = edmond_solve(data)
     stop = time.time()
     s += "Solving time: %8.3f"%(stop - start)
     output_file_name = file_name.replace('data', 'output_edmond')

@@ -1,0 +1,234 @@
+import os
+import time
+import random
+import math 
+
+def read_data(file_name):
+    data_dir = 'DataSet'
+    with open(os.path.abspath(os.path.join(data_dir, file_name)), 'r') as f:
+        lines = f.readlines()
+
+    data = dict()
+    data['N'], data['D'] = (int(e) for e in lines[0].split(' '))
+
+    data['d'] = list()
+    for line in lines[1:data['N'] + 1]:
+        data['d'].append([int(e) for e in line.split(' ')][:data['N']])
+    data['max_d'] = max([v for u in data['d'] for v in u])
+
+    data['c'] = list()
+    for line in lines[data['N'] + 1:2 * data['N'] + 1]:
+        data['c'].append([int(e) for e in line.split(' ')][:data['N']])
+    return data
+
+def tabu_solve(data):
+    s = ''
+    N, D, d, max_d, c = data['N'], data['D'], data['d'], data['max_d'], data['c']
+    sum_c = sum(sum(c[i]) for i in range(N))
+    child = [ [] for _ in range(N)]
+    parent = [-1] * N    # parent[i] là cha của đỉnh i
+    search_objective = 0
+
+    best_solution = [-1] * N
+    best_sol_search_obj = sum_c
+
+    last_improve_sol = [-1] * N
+    last_improve_sol_obj = sum_c
+
+    tabu = [0] * N
+    tbl = math.floor(math.sqrt(N))
+    tbl_min = math.floor(math.log10(N))
+    tbl_max = math.floor(N/2)
+
+    stable = 0
+    stable_limit = 30
+
+    restart_freq = 100
+
+    parent, child, search_objective = gen_random_solution(N, D, d, c, sum_c)
+
+    it = 1
+    max_it = 300
+
+    while(it < max_it):
+        it += 1
+
+        #Cập nhật lời giải kỉ lục
+        if search_objective < best_sol_search_obj:
+            best_sol_search_obj = search_objective
+            for i in range(1, N):
+                best_solution[i] = parent[i]
+            stable = 0
+
+        elif stable == stable_limit:
+            print("Restore")
+            search_objective = last_improve_sol_obj
+            for i in range(1, N):
+                parent[i] = last_improve_sol[i]
+
+            stable = 0
+        else:
+            stable += 1
+
+            #Restart
+            if it%restart_freq == 0:
+                print("Restarted ")
+
+                #Sinh lời giải ngẫu nhiên
+                parent, child, search_objective = gen_random_solution(N, D, d, c, sum_c)
+
+                #Update tabu
+                for i in range(1, N):
+                    tabu[i] = 0
+
+        old_search_objective = search_objective
+        select_parent, select_child, new_search_objective = search_next_solution(N, D, d, c, sum_c, parent, child, tabu )
+        print("select parent = ", select_parent, " select child = ", select_child, 
+            " new search objective = ", new_search_objective)
+
+        #Move
+        current_parent = parent[select_child]
+        parent[select_child] = select_parent
+        child[current_parent].remove(select_child)
+        child[select_parent].append(select_child)
+        search_objective = new_search_objective
+
+        #Update tabu
+        for i in range(1,N):
+            if tabu[i] > 0:
+                tabu[i] -= 1
+    
+        tabu[select_child] = tbl
+
+        if new_search_objective < old_search_objective:
+            if tbl > tbl_min:
+                tbl -= 1
+        else:
+            if tbl < tbl_max:
+                tbl += 1
+
+        #Update last improved solution
+        if new_search_objective < old_search_objective:
+            print("Improved")
+
+            last_improve_sol_obj = new_search_objective
+            for i in range(1, N):
+                last_improve_sol[i] = parent[i]
+        
+            stable = 0
+    print("From  To   Cost")
+    for i in range(1, N):
+        s += "%d -> %d\n"%(best_solution[i], i)
+        print ("%d ->   %d :    %d \n "%(best_solution[i], i, c[ best_solution[i]][ i]))
+    print(" Objective value : ", best_sol_search_obj )
+    s += "Cost: %8.3f\n"%(best_sol_search_obj)
+    return s
+
+# hàm sinh lời giải ngẫu nhiên dựa theo data
+def gen_random_solution(N, D, d, c, sum_c):
+    parent = [-1] * N
+    child = [ [] for _ in range(N)]
+    un_visited = list(range(N))
+    un_visited.remove(0)
+    visited = [0]
+    total_cost = 0
+    total_violation = 0
+
+    while(len(un_visited) > 0):
+        i = random.choice(un_visited)
+        un_visited.remove(i)
+        parent[i] = random.choice(visited)
+        child[parent[i]].append(i)
+        visited.append(i)
+
+    # đếm số ràng buộc bị vi phạm
+    # chỉ cần đếm tại các nút lá
+    for i in range(1,N):
+        sum = 0
+        if(len(child[i]) == 0):
+            while parent[i] != -1:
+                sum += d[parent[i]][i]
+                i = parent[i]
+                if sum > D:
+                    total_violation += 1
+                    break
+    
+    for i in range(1,N):
+        total_cost += c[parent[i]][i]
+
+    search_objective = (N-1) * sum_c * total_violation + total_cost
+    return parent, child, search_objective
+
+# Hàm tính giá trị của hàm tối ưu tại 1 trạng thái đang xét của các đỉnh và cạnh
+def cal_search_value(N, D, d, c, sum_c, parent, child ):
+    total_cost = 0
+    total_violation = 0
+    # đếm số ràng buộc bị vi phạm
+    # chỉ cần đếm tại các nút lá
+    for i in range(1,N):
+        sum = 0
+        if(len(child[i]) == 0):
+            while parent[i] != -1:
+                sum += d[parent[i]][i]
+                i = parent[i]
+                if sum > D:
+                    total_violation += 1
+                    break
+    
+    for i in range(1,N):
+        total_cost += c[parent[i]][i]
+    search_objective = (N-1) * sum_c * total_violation + total_cost
+    return search_objective
+
+# Hàm tìm 1 lời giải tiếp theo
+def search_next_solution(N, D, d, c, sum_c, parent, child, tabu):
+    select_child = -1
+    select_parent = -1
+    new_search_objective = sum_c
+
+    print(sum_c)
+
+    for s in range(1,N):
+        if tabu[s] > 0:
+            continue
+
+        current_parent = parent[s]
+        
+        for p in range(N):
+            if p == current_parent or p == s:
+                continue
+
+            temp_parent = parent[p]
+            while temp_parent != -1:
+                if temp_parent == s:
+                    break
+                temp_parent = parent[temp_parent]
+            if temp_parent == s:
+                continue
+
+            parent[s] = p
+            child[current_parent].remove(s)
+            child[p].append(s)
+            objective_val = cal_search_value(N, D, d, c, sum_c, parent, child )
+            if objective_val < new_search_objective:
+                new_search_objective = objective_val
+                select_child = s
+                select_parent = p
+                
+            parent[s] = current_parent
+            child[current_parent].append(s)
+            child[p].remove(s)
+
+    return select_parent, select_child, new_search_objective
+if __name__ == '__main__':
+    file_name = 'data10.txt'
+    data = read_data(file_name)
+    print(file_name)
+    start = time.time()
+    s = tabu_solve(data)
+    stop = time.time()
+    s += "Solving time: %8.3f"%(stop - start)
+    print("Solving time: %8.3f"%(stop - start))
+    output_file_name = file_name.replace('data', 'output_tabu')
+    with open(os.path.abspath(os.path.join(os.curdir, 'Tabu', 'output', output_file_name)), 'w', encoding='utf-8') as f:
+        f.write(s)
