@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const int MAX_SHAKING = 3;
+int MAX_SHAKING;
 
 int N;
 long long D;
@@ -49,7 +49,7 @@ struct State
         children = vector<vector<int>>(N, vector<int>());
         for (int i = 1; i < N; i++)
         {
-            children[0].push_back(i);
+            children[i - 1].push_back(i);
         }
     }
 
@@ -78,10 +78,10 @@ long long State::calTimeDuration(int i)
     {
         return result;
     }
-    while (parent[i] != 0)
+    while (this->parent[i] != 0)
     {
-        result += c[parent[i]][i];
-        i = parent[i];
+        result += c[this->parent[i]][i];
+        i = this->parent[i];
     }
     result += c[0][i];
     return result;
@@ -101,10 +101,10 @@ bool State::isValidSolution()
 
 long long State::getCost()
 {
-    long long result = 0;
+    long long result = 0ll;
     for (int i = 1; i < N; i++)
     {
-        result += c[parent[i]][i];
+        result += c[this->parent[i]][i];
     }
     return result;
 }
@@ -147,7 +147,7 @@ vector<State> State::getAllNeighbors()
     vector<State> result;
     for (int i = 1; i < N; i++)
     {
-        vector<int> _parent = parent;
+        vector<int> _parent = this->parent;
         int j = _parent[i];
         if ((int)children[j].size() > 1)
         {
@@ -180,6 +180,7 @@ vector<State> State::getAllNeighbors()
 pair<bool, State> State::localSearch()
 {
     State result = *this;
+    
     bool hasSolution = result.isValidSolution();
     vector<State> neighbors = result.getAllNeighbors();
     for (auto element : neighbors)
@@ -196,6 +197,7 @@ pair<bool, State> State::localSearch()
 vector<State> getMoreNeighbors(vector<State>& currentNeighbors, vector<State> latestNeighbors)
 {
     vector<State> newNeighbors;
+    int i = 0;
     for (auto element: latestNeighbors)
     {
         vector<State> neighbors = element.getAllNeighbors();
@@ -257,9 +259,9 @@ void State::write()
     {
         for (int i = 1; i < N; i++)
         {
-            cout << parent[i] << " -> " << i << endl;
+            cout << this->parent[i] << " -> " << i << " " << c[this->parent[i]][i] << endl;
         }
-        cout << "Cost " << getCost() << endl;
+        cout << "Cost " << this->getCost() << endl;
     }
     else
     {
@@ -273,29 +275,30 @@ int main()
     cin.tie(0);
     string inputDirectory = "D:\\Optimal\\project_optimal_planning\\DataSet\\";
     string outputDirectory = "D:\\Optimal\\project_optimal_planning\\Variable-Neighborhood-Search\\output\\";
-    vector<vector<string>> fileNames = vector<vector<string>>{
-        {"data1.txt", "output1.txt"},
-        {"data2.txt", "output2.txt"},
-        {"data3.txt", "output3.txt"},
-        {"data4.txt", "output4.txt"},
-        {"data5.txt", "output5.txt"},
-        {"data6.txt", "output6.txt"},
-        {"data7.txt", "output7.txt"},
-        {"data8.txt", "output8.txt"},
-        {"data9.txt", "output9.txt"},
-        {"data10.txt", "output10.txt"}
+    vector<pair<vector<string>, int>> fileNames = vector<pair<vector<string>, int>>{
+        {{"data1.txt", "output1.txt"}, 2},
+        {{"data2.txt", "output2.txt"}, 5},
+        {{"data3.txt", "output3.txt"}, 5},
+        {{"data4.txt", "output4.txt"}, 5},
+        {{"data5.txt", "output5.txt"}, 5},
+        {{"data6.txt", "output6.txt"}, 5},
+        {{"data7.txt", "output7.txt"}, 5},
+        {{"data8.txt", "output8.txt"}, 5},
+        {{"data9.txt", "output9.txt"}, 5},
+        {{"data10.txt", "output10.txt"}, 5}
     };
     for (auto p: fileNames)
     {
-        string _inputFile = inputDirectory + p[0];
+        string _inputFile = inputDirectory + p.first[0];
         const char* inputFile = _inputFile.c_str();
         freopen(inputFile, "r", stdin);
-        string _outputFile = outputDirectory + p[1];
+        string _outputFile = outputDirectory + p.first[1];
         const char* outputFile = _outputFile.c_str();
-        // cout << inputFile << " " << outputFile << endl;
         freopen(outputFile, "w", stdout);
+        // cout << inputFile << " " << outputFile << endl;
         readData();
         // cout << N << " " << D << endl;
+        MAX_SHAKING = p.second;
         start = clock();
         variableNeighborhoodSearch();
         clock_t end = clock();
